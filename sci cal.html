@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SciCalc Pro - Scientific Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: linear-gradient(145deg, #1a2a3a 0%, #0f1a24 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', 'Roboto', 'Monaco', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* Calculator Container */
+        .calculator {
+            background: rgba(18, 25, 35, 0.85);
+            backdrop-filter: blur(2px);
+            border-radius: 48px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            padding: 22px 20px 28px;
+            width: 100%;
+            max-width: 550px;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Display Area */
+        .display {
+            background: #0b1117;
+            border-radius: 32px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: right;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .expression {
+            font-size: 1.4rem;
+            color: #8aaec0;
+            min-height: 2rem;
+            font-family: 'Monaco', 'Cascadia Code', monospace;
+            letter-spacing: 0.5px;
+        }
+
+        .result {
+            font-size: 2.9rem;
+            font-weight: 600;
+            color: #eef4ff;
+            line-height: 1.2;
+            margin-top: 8px;
+            font-family: 'Segoe UI', 'Roboto', monospace;
+            word-break: break-word;
+        }
+
+        /* Buttons Grid */
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px 10px;
+        }
+
+        /* General button style */
+        button {
+            background: #1e2a36;
+            border: none;
+            border-radius: 28px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 14px 0;
+            color: #eef2f5;
+            font-family: 'Segoe UI', 'Roboto', monospace;
+            cursor: pointer;
+            transition: all 0.15s linear;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.5px;
+        }
+
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Special button types */
+        .num-btn {
+            background: #263b4a;
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+
+        .op-btn {
+            background: #2c4b62;
+            color: #c3e2fc;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .fn-btn {
+            background: #1f3b44;
+            color: #bbd4f0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .clear-btn {
+            background: #6d2e3e;
+            color: #ffcfcf;
+        }
+
+        .equal-btn {
+            background: #2a6b5e;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #1a4b41;
+        }
+
+        .del-btn {
+            background: #6c4e3a;
+            color: #ffe1b3;
+        }
+
+        /* special span for double width if needed, but keeping all 6col */
+        button:hover {
+            filter: brightness(1.08);
+        }
+
+        /* responsive */
+        @media (max-width: 550px) {
+            .buttons {
+                gap: 8px;
+            }
+            button {
+                padding: 10px 0;
+                font-size: 0.9rem;
+            }
+            .num-btn {
+                font-size: 1.1rem;
+            }
+            .result {
+                font-size: 2rem;
+            }
+            .expression {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .buttons {
+                gap: 7px;
+            }
+            button {
+                font-size: 0.75rem;
+                padding: 8px 0;
+            }
+            .fn-btn {
+                font-size: 0.7rem;
+            }
+        }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 0.7rem;
+            color: #6c8b9c;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+<div class="calculator">
+    <div class="display">
+        <div class="expression" id="expressionDisplay"></div>
+        <div class="result" id="resultDisplay">0</div>
+    </div>
+    <div class="buttons" id="buttonsContainer">
+        <!-- dynamic generation can be here, but for clarity static grid with JS handlers -->
+    </div>
+    <div class="footer-note">scientific | radian mode (trig: rad)</div>
+</div>
+
+<script>
+    // ---------------- Scientific Calculator Core ----------------
+    // current state
+    let currentInput = "0";        // string being built or last result
+    let expression = "";           // shows full expression (optional)
+    let lastResult = null;
+    let waitingForOperand = false;  // after an operation, next number starts fresh
+    let pendingOperator = null;      // pending binary operation (+, -, ×, ÷, ^, root?)
+    let memoryValue = 0;
+    
+    // DOM elements
+    const expressionDiv = document.getElementById("expressionDisplay");
+    const resultDiv = document.getElementById("resultDisplay");
+    
+    // Helper: update display from current input (raw)
+    function updateDisplay() {
+        // format currentInput: avoid unnecessary decimals for integers
+        let showValue = currentInput;
+        if (showValue === "") showValue = "0";
+        // limit too many decimals on screen
+        if (showValue.length > 22) {
+            showValue = parseFloat(showValue).toExponential(10);
+        }
+        resultDiv.innerText = showValue;
+        expressionDiv.innerText = expression || " ";
+    }
+    
+    // Set current value and refresh
+    function setCurrent(value) {
+        if (value === undefined || isNaN(value) || !isFinite(value)) {
+            currentInput = "Error";
+            expression = "";
+            pendingOperator = null;
+            waitingForOperand = true;
+            updateDisplay();
+            return;
+        }
+        // convert to string without scientific if integerish, but preserve precision
+        let strVal = value.toString();
+        // handle floating rounding
+        if (strVal.length > 18 && Math.abs(value) < 1e15) {
+            strVal = parseFloat(value.toFixed(12)).toString();
+        }
+        currentInput = strVal;
+        if (waitingForOperand) {
+            // after operator, replace currentInput
+            // but we also keep expression consistency
+            waitingForOperand = false;
+        }
+        updateDisplay();
+    }
+    
+    // append digit or decimal
+    function inputDigit(digit) {
+        if (currentInput === "Error") {
+            clearAll();
+        }
+        if (waitingForOperand) {
+            currentInput = digit.toString();
+            waitingForOperand = false;
+        } else {
+            // avoid multiple leading zeros
+            if (currentInput === "0" && digit !== ".") {
+                currentInput = digit.toString();
+            } else {
+                currentInput += digit.toString();
+            }
+        }
+        updateDisplay();
+    }
+    
+    function inputDecimal() {
+        if (currentInput === "Error") clearAll();
+        if (waitingForOperand) {
+            currentInput = "0.";
+            waitingForOperand = false;
+        } else {
+            if (!currentInput.includes(".")) {
+                currentInput += ".";
+            } else {
+                // already has decimal
+                return;
+            }
+        }
+        updateDisplay();
+    }
+    
+    function toggleSign() {
+        if (currentInput === "Error") clearAll();
+        let val = parseFloat(currentInput);
+        if (isNaN(val)) val = 0;
+        val = -val;
+        currentInput = val.toString();
+        updateDisplay();
+        if (!expression && !pendingOperator && !waitingForOperand) {
+            expression = currentInput;
+            updateDisplay();
+        }
+    }
+    
+    // Percentage: treat as percent of current value
+    function percentOp() {
+        if (currentInput === "Error") clearAll();
+        let val = parseFloat(currentInput);
+        if (isNaN(val)) val = 0;
+        val = val / 100;
+        currentInput = val.toString();
+        updateDisplay();
+    }
+    
+    // core calculate: a op b
+    function calculateBinary(a, b, op) {
+        let x = parseFloat(a);
+        let y = parseFloat(b);
+        if (isNaN(x)) x = 0;
+        if (isNaN(y)) y = 0;
+        switch (op) {
+            case '+': return x + y;
+            case '-': return x - y;
+            case '×': return x * y;
+            case '÷': 
+                if (y === 0) return NaN;
+                return x / y;
+            case '^': return Math.pow(x, y);
+            case 'root': 
+                if (x < 0 && y % 2 === 0) return NaN;
+                return Math.pow(x, 1 / y);
+            default: return y;
+        }
+    }
+    
+    // Execute pending operation if exists
+    function applyPendingOperation(newValue) {
+        if (pendingOperator !== null && !waitingForOperand) {
+            let prev = lastResult !== null && !expression.includes('=') ? lastResult : parseFloat(currentInput);
+            // but better: we keep lastOperand value
+            // we'll store previous operand as lastResult, but careful
+            if (lastResult === null && expression) {
+                // try extract first number from expression ?? simpler: store prevOperand
+                // easier: maintain previousOperand variable
+            }
+        }
+    }
+    
+    // robust approach: store prevOperand globally
+    let storedOperand = null;
+    
+    function setOperator(op) {
+        if (currentInput === "Error") clearAll();
+        // if there's a pending operator and we are not waiting, compute previous first
+        if (pendingOperator !== null && !waitingForOperand) {
+            // perform pending operation with stored operand and currentInput
+            let result = calculateBinary(storedOperand, currentInput, pendingOperator);
+            if (isNaN(result) || !isFinite(result)) {
+                currentInput = "Math Error";
+                expression = "";
+                pendingOperator = null;
+                waitingForOperand = true;
+                updateDisplay();
+                return;
+            }
+            currentInput = result.toString();
+            storedOperand = currentInput;
+            // update expression to show accumulated
+            expression = storedOperand + " " + op;
+        } else {
+            // first operator or after equals
+            if (waitingForOperand && pendingOperator !== null) {
+                // just replace operator
+                pendingOperator = op;
+                expression = storedOperand + " " + op;
+                updateDisplay();
+                return;
+            }
+            storedOperand = currentInput;
+            expression = currentInput + " " + op;
+        }
+        pendingOperator = op;
+        waitingForOperand = true;
+        updateDisplay();
+    }
+    
+    // equals: compute final result
+    function computeResult() {
+        if (pendingOperator !== null && !waitingForOperand && storedOperand !== null) {
+            let result = calculateBinary(storedOperand, currentInput, pendingOperator);
+            if (isNaN(result) || !isFinite(result)) {
+                currentInput = "Undefined";
+                expression = "";
+                pendingOperator = null;
+                waitingForOperand = true;
+                updateDisplay();
+                return;
+            }
+            expression = expression + " " + currentInput + " =";
+            currentInput = result.toString();
+            storedOperand = null;
+            pendingOperator = null;
+            waitingForOperand = true;  // after equals, next number new start
+            updateDisplay();
+            // optional store last result as memory reference
+        } else {
+            // no pending: just keep value
+            if (currentInput === "Error") clearAll();
+            expression = "";
+            waitingForOperand = true;
+            updateDisplay();
+        }
+        // after equals, no pending op
+    }
+    
+    // scientific functions (Radian mode)
+    function applyScientific(func) {
+        if (currentInput === "Error") clearAll();
+        let val = parseFloat(currentInput);
+        if (isNaN(val)) val = 0;
+        let resultVal;
+        switch (func) {
+            case 'sin':
+                resultVal = Math.sin(val);
+                break;
+            case 'cos':
+                resultVal = Math.cos(val);
+                break;
+            case 'tan':
+                resultVal = Math.tan(val);
+                break;
+            case 'asin':
+                if (val < -1 || val > 1) resultVal = NaN;
+                else resultVal = Math.asin(val);
+                break;
+            case 'acos':
+                if (val < -1 || val > 1) resultVal = NaN;
+                else resultVal = Math.acos(val);
+                break;
+            case 'atan':
+                resultVal = Math.atan(val);
+                break;
+            case 'log':
+                if (val <= 0) resultVal = NaN;
+                else resultVal = Math.log10(val);
+                break;
+            case 'ln':
+                if (val <= 0) resultVal = NaN;
+                else resultVal = Math.log(val);
+                break;
+            case 'sqrt':
+                if (val < 0) resultVal = NaN;
+                else resultVal = Math.sqrt(val);
+                break;
+            case 'exp':
+                resultVal = Math.exp(val);
+                break;
+            case 'pow2':
+                resultVal = Math.pow(val, 2);
+                break;
+            case 'pow3':
+                resultVal = Math.pow(val, 3);
+                break;
+            case 'recip':
+                if (val === 0) resultVal = NaN;
+                else resultVal = 1 / val;
+                break;
+            case 'fact':
+                if (val < 0 || !Number.isInteger(val) || val > 170) resultVal = NaN;
+                else {
+                    let f = 1;
+                    for (let i = 2; i <= val; i++) f *= i;
+                    resultVal = f;
+                }
+                break;
+            case 'pi':
+                resultVal = Math.PI;
+                break;
+            case 'e':
+                resultVal = Math.E;
+                break;
+            default: return;
+        }
+        if (isNaN(resultVal) || !isFinite(resultVal)) {
+            currentInput = "Math Error";
+        } else {
+            currentInput = resultVal.toString();
+        }
+        waitingForOperand = true;
+        pendingOperator = null;
+        storedOperand = null;
+        expression = func.toUpperCase() + "(" + val + ")";
+        updateDisplay();
+    }
+    
+    // clear All (AC)
+    function clearAll() {
+        currentInput = "0";
+        expression = "";
+        pendingOperator = null;
+        waitingForOperand = false;
+        storedOperand = null;
+        lastResult = null;
+        updateDisplay();
+    }
+    
+    function backspace() {
+        if (currentInput === "Error") {
+            clearAll();
+            return;
+        }
+        if (waitingForOperand) return;
+        if (currentInput.length === 1) {
+            currentInput = "0";
+        } else if (currentInput.length > 0) {
+            currentInput = currentInput.slice(0, -1);
+            if (currentInput === "" || currentInput === "-") currentInput = "0";
+        }
+        updateDisplay();
+    }
+    
+    // memory functions
+    function memoryRecall() {
+        if (memoryValue !== undefined && !isNaN(memoryValue)) {
+            currentInput = memoryValue.toString();
+            waitingForOperand = false;
+            updateDisplay();
+        }
+    }
+    
+    function memoryStore() {
+        let val = parseFloat(currentInput);
+        if (!isNaN(val)) memoryValue = val;
+    }
+    
+    function memoryAdd() {
+        let val = parseFloat(currentInput);
+        if (!isNaN(val)) memoryValue += val;
+    }
+    
+    function memoryClear() {
+        memoryValue = 0;
+    }
+    
+    // ---------- UI Generation (dynamic but ensures all buttons) ----------
+    const buttonLayout = [
+        // row 0
+        { label: "AC", action: () => clearAll(), class: "clear-btn" },
+        { label: "⌫", action: () => backspace(), class: "del-btn" },
+        { label: "±", action: () => toggleSign(), class: "fn-btn" },
+        { label: "%", action: () => percentOp(), class: "fn-btn" },
+        { label: "÷", action: () => setOperator("÷"), class: "op-btn" },
+        
+        // row 1 : 7 8 9 ×
+        { label: "7", action: () => inputDigit(7), class: "num-btn" },
+        { label: "8", action: () => inputDigit(8), class: "num-btn" },
+        { label: "9", action: () => inputDigit(9), class: "num-btn" },
+        { label: "×", action: () => setOperator("×"), class: "op-btn" },
+        { label: "√", action: () => applyScientific("sqrt"), class: "fn-btn" },
+        { label: "x²", action: () => applyScientific("pow2"), class: "fn-btn" },
+        
+        // row 2: 4 5 6 - 
+        { label: "4", action: () => inputDigit(4), class: "num-btn" },
+        { label: "5", action: () => inputDigit(5), class: "num-btn" },
+        { label: "6", action: () => inputDigit(6), class: "num-btn" },
+        { label: "-", action: () => setOperator("-"), class: "op-btn" },
+        { label: "x³", action: () => applyScientific("pow3"), class: "fn-btn" },
+        { label: "1/x", action: () => applyScientific("recip"), class: "fn-btn" },
+        
+        // row 3: 1 2 3 +
+        { label: "1", action: () => inputDigit(1), class: "num-btn" },
+        { label: "2", action: () => inputDigit(2), class: "num-btn" },
+        { label: "3", action: () => inputDigit(3), class: "num-btn" },
+        { label: "+", action: () => setOperator("+"), class: "op-btn" },
+        { label: "^", action: () => setOperator("^"), class: "op-btn" },
+        { label: "exp", action: () => applyScientific("exp"), class: "fn-btn" },
+        
+        // row 4: 0 . ( ) not needed but sin cos tan log
+        { label: "0", action: () => inputDigit(0), class: "num-btn" },
+        { label: ".", action: () => inputDecimal(), class: "num-btn" },
+        { label: "sin", action: () => applyScientific("sin"), class: "fn-btn" },
+        { label: "cos", action: () => applyScientific("cos"), class: "fn-btn" },
+        { label: "tan", action: () => applyScientific("tan"), class: "fn-btn" },
+        { label: "log", action: () => applyScientific("log"), class: "fn-btn" },
+        
+        // row 5: extra sci: asin acos atan ln pi e
+        { label: "asin", action: () => applyScientific("asin"), class: "fn-btn" },
+        { label: "acos", action: () => applyScientific("acos"), class: "fn-btn" },
+        { label: "atan", action: () => applyScientific("atan"), class: "fn-btn" },
+        { label: "ln", action: () => applyScientific("ln"), class: "fn-btn" },
+        { label: "π", action: () => applyScientific("pi"), class: "fn-btn" },
+        { label: "e", action: () => applyScientific("e"), class: "fn-btn" },
+        
+        // row 6: n! MC MR M+ MS, equal spanning last column? but keep consistent grid
+        { label: "n!", action: () => applyScientific("fact"), class: "fn-btn" },
+        { label: "MC", action: () => memoryClear(), class: "fn-btn" },
+        { label: "MR", action: () => memoryRecall(), class: "fn-btn" },
+        { label: "M+", action: () => memoryAdd(), class: "fn-btn" },
+        { label: "MS", action: () => memoryStore(), class: "fn-btn" },
+        { label: "=", action: () => computeResult(), class: "equal-btn" },
+    ];
+    
+    // generate buttons dynamically
+    const container = document.getElementById("buttonsContainer");
+    function buildUI() {
+        container.innerHTML = "";
+        for (let btn of buttonLayout) {
+            const buttonElem = document.createElement("button");
+            buttonElem.innerText = btn.label;
+            buttonElem.className = btn.class;
+            buttonElem.addEventListener("click", (e) => {
+                e.preventDefault();
+                btn.action();
+            });
+            container.appendChild(buttonElem);
+        }
+    }
+    
+    buildUI();
+    
+    // keyboard support
+    function handleKeyboard(e) {
+        const key = e.key;
+        // numbers 0-9
+        if (/[0-9]/.test(key)) {
+            e.preventDefault();
+            inputDigit(parseInt(key));
+        } 
+        else if (key === '.') {
+            e.preventDefault();
+            inputDecimal();
+        }
+        else if (key === '+' || key === '-') {
+            e.preventDefault();
+            if (key === '+') setOperator('+');
+            else if (key === '-') setOperator('-');
+        }
+        else if (key === '*') {
+            e.preventDefault();
+            setOperator('×');
+        }
+        else if (key === '/') {
+            e.preventDefault();
+            setOperator('÷');
+        }
+        else if (key === '^' || key === '**') {
+            e.preventDefault();
+            setOperator('^');
+        }
+        else if (key === 'Enter' || key === '=') {
+            e.preventDefault();
+            computeResult();
+        }
+        else if (key === 'Escape') {
+            e.preventDefault();
+            clearAll();
+        }
+        else if (key === 'Backspace') {
+            e.preventDefault();
+            backspace();
+        }
+        else if (key === '%') {
+            e.preventDefault();
+            percentOp();
+        }
+        else if (key === 's' || key === 'S') {
+            e.preventDefault();
+            applyScientific('sin');
+        }
+        else if (key === 'c') {
+            e.preventDefault();
+            applyScientific('cos');
+        }
+        else if (key === 't') {
+            e.preventDefault();
+            applyScientific('tan');
+        }
+        else if (key === 'l') {
+            e.preventDefault();
+            applyScientific('log');
+        }
+        else if (key === 'L') {
+            e.preventDefault();
+            applyScientific('ln');
+        }
+        else if (key === 'r') {
+            e.preventDefault();
+            applyScientific('sqrt');
+        }
+        else if (key === 'q') {
+            e.preventDefault();
+            applyScientific('pow2');
+        }
+    }
+    
+    window.addEventListener('keydown', handleKeyboard);
+    // initial display
+    clearAll();
+</script>
+</body>
+</html>
