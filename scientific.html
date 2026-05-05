@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>SciCalc Pro - Scientific Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            background: #f5f5dc; /* cream color */
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', 'Poppins', 'Roboto', 'Monaco', monospace;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .calculator {
+            background: rgba(18, 25, 35, 0.85);
+            backdrop-filter: blur(2px);
+            border-radius: 48px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            padding: 22px 20px 28px;
+            width: 100%;
+            max-width: 550px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .display {
+            background: #0b1117;
+            border-radius: 32px;
+            padding: 20px 24px;
+            margin-bottom: 28px;
+            text-align: right;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .expression {
+            font-size: 1.4rem;
+            color: #8aaec0;
+            min-height: 2rem;
+            font-family: monospace;
+        }
+
+        .result {
+            font-size: 2.9rem;
+            font-weight: 600;
+            color: #eef4ff;
+            margin-top: 8px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px 10px;
+        }
+
+        button {
+            background: #1e2a36;
+            border: none;
+            border-radius: 28px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 14px 0;
+            color: #eef2f5;
+            cursor: pointer;
+        }
+
+        .num-btn { background: #263b4a; }
+        .op-btn { background: #2c4b62; color: #c3e2fc; }
+        .fn-btn { background: #1f3b44; color: #bbd4f0; }
+        .clear-btn { background: #6d2e3e; }
+        .equal-btn { background: #2a6b5e; }
+        .del-btn { background: #6c4e3a; }
+
+        .footer-note {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 0.7rem;
+            color: #6c8b9c;
+        }
+    </style>
+</head>
+<body>
+<div class="calculator">
+    <div class="display">
+        <div class="expression" id="expressionDisplay"></div>
+        <div class="result" id="resultDisplay">0</div>
+    </div>
+    <div class="buttons" id="buttonsContainer"></div>
+    <div class="footer-note">scientific | radian mode</div>
+</div>
+
+<script>
+let currentInput = "0";
+let expression = "";
+let pendingOperator = null;
+let storedOperand = null;
+let waitingForOperand = false;
+
+const resultDiv = document.getElementById("resultDisplay");
+const expressionDiv = document.getElementById("expressionDisplay");
+
+function updateDisplay() {
+    resultDiv.innerText = currentInput;
+    expressionDiv.innerText = expression;
+}
+
+function inputDigit(d) {
+    if (waitingForOperand) {
+        currentInput = d.toString();
+        waitingForOperand = false;
+    } else {
+        currentInput = currentInput === "0" ? d.toString() : currentInput + d;
+    }
+    updateDisplay();
+}
+
+function inputDecimal() {
+    if (!currentInput.includes(".")) currentInput += ".";
+    updateDisplay();
+}
+
+function clearAll() {
+    currentInput = "0";
+    expression = "";
+    pendingOperator = null;
+    storedOperand = null;
+    updateDisplay();
+}
+
+function setOperator(op) {
+    storedOperand = currentInput;
+    pendingOperator = op;
+    expression = currentInput + " " + op;
+    waitingForOperand = true;
+}
+
+function compute() {
+    if (!pendingOperator) return;
+    let a = parseFloat(storedOperand);
+    let b = parseFloat(currentInput);
+    let result;
+
+    switch (pendingOperator) {
+        case "+": result = a + b; break;
+        case "-": result = a - b; break;
+        case "×": result = a * b; break;
+        case "÷": result = b === 0 ? "Error" : a / b; break;
+    }
+
+    currentInput = result.toString();
+    expression = "";
+    pendingOperator = null;
+    updateDisplay();
+}
+
+const buttons = [
+    "AC","⌫","%","÷",
+    "7","8","9","×",
+    "4","5","6","-",
+    "1","2","3","+",
+    "0",".","="
+];
+
+const container = document.getElementById("buttonsContainer");
+
+buttons.forEach(btn => {
+    const b = document.createElement("button");
+    b.innerText = btn;
+
+    b.onclick = () => {
+        if (!isNaN(btn)) inputDigit(btn);
+        else if (btn === ".") inputDecimal();
+        else if (btn === "AC") clearAll();
+        else if (btn === "=") compute();
+        else setOperator(btn);
+    };
+
+    container.appendChild(b);
+});
+
+updateDisplay();
+</script>
+</body>
+</html>
