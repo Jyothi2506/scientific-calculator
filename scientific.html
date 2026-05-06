@@ -1,193 +1,693 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>SciCalc Pro - Scientific Calculator</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
 
-        body {
-            background: #f5f5dc; /* cream color */
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Poppins', 'Roboto', 'Monaco', monospace;
-            padding: 20px;
-            margin: 0;
-        }
+<meta charset="UTF-8">
 
-        .calculator {
-            background: rgba(18, 25, 35, 0.85);
-            backdrop-filter: blur(2px);
-            border-radius: 48px;
-            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.1);
-            padding: 22px 20px 28px;
-            width: 100%;
-            max-width: 550px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-        .display {
-            background: #0b1117;
-            border-radius: 32px;
-            padding: 20px 24px;
-            margin-bottom: 28px;
-            text-align: right;
-            word-wrap: break-word;
-            word-break: break-all;
-        }
+<title>Exact Scientific Calculator</title>
 
-        .expression {
-            font-size: 1.4rem;
-            color: #8aaec0;
-            min-height: 2rem;
-            font-family: monospace;
-        }
+<style>
 
-        .result {
-            font-size: 2.9rem;
-            font-weight: 600;
-            color: #eef4ff;
-            margin-top: 8px;
-        }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 12px 10px;
-        }
+body{
 
-        button {
-            background: #1e2a36;
-            border: none;
-            border-radius: 28px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            padding: 14px 0;
-            color: #eef2f5;
-            cursor: pointer;
-        }
+    background:#101820;
 
-        .num-btn { background: #263b4a; }
-        .op-btn { background: #2c4b62; color: #c3e2fc; }
-        .fn-btn { background: #1f3b44; color: #bbd4f0; }
-        .clear-btn { background: #6d2e3e; }
-        .equal-btn { background: #2a6b5e; }
-        .del-btn { background: #6c4e3a; }
+    display:flex;
 
-        .footer-note {
-            text-align: center;
-            margin-top: 18px;
-            font-size: 0.7rem;
-            color: #6c8b9c;
-        }
-    </style>
+    justify-content:center;
+
+    align-items:center;
+
+    min-height:100vh;
+
+    font-family:Arial;
+
+    padding:20px;
+}
+
+.calculator{
+
+    width:100%;
+
+    max-width:700px;
+
+    background:#1b1b1b;
+
+    padding:25px;
+
+    border-radius:25px;
+
+    box-shadow:0 0 25px rgba(0,0,0,0.5);
+}
+
+/* DISPLAY */
+
+.display{
+
+    background:#000;
+
+    color:#0f0;
+
+    padding:20px;
+
+    border-radius:15px;
+
+    margin-bottom:20px;
+
+    text-align:right;
+
+    overflow-x:auto;
+}
+
+#display{
+
+    font-size:2.5rem;
+}
+
+/* MODE */
+
+.mode{
+
+    text-align:center;
+
+    margin-bottom:15px;
+}
+
+.mode button{
+
+    padding:10px 20px;
+
+    margin:5px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+
+    background:#333;
+
+    color:white;
+}
+
+.active{
+
+    background:#0f0 !important;
+
+    color:black !important;
+}
+
+/* BUTTONS */
+
+.buttons{
+
+    display:grid;
+
+    grid-template-columns:repeat(6,1fr);
+
+    gap:10px;
+}
+
+button{
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:16px;
+
+    font-weight:bold;
+}
+
+.num{
+
+    background:#263b4a;
+
+    color:white;
+}
+
+.operator{
+
+    background:#2c4b62;
+
+    color:white;
+}
+
+.function{
+
+    background:#1f3b44;
+
+    color:#bbd4f0;
+}
+
+.equal{
+
+    background:#2a6b5e;
+
+    color:white;
+}
+
+.clear{
+
+    background:#8b2f45;
+
+    color:white;
+}
+
+.delete{
+
+    background:#6c4e3a;
+
+    color:white;
+}
+
+button:hover{
+
+    opacity:0.8;
+}
+
+.footer{
+
+    margin-top:20px;
+
+    text-align:center;
+
+    color:#999;
+}
+
+</style>
+
 </head>
+
 <body>
+
 <div class="calculator">
-    <div class="display">
-        <div class="expression" id="expressionDisplay"></div>
-        <div class="result" id="resultDisplay">0</div>
-    </div>
-    <div class="buttons" id="buttonsContainer"></div>
-    <div class="footer-note">scientific | radian mode</div>
+
+<!-- DISPLAY -->
+
+<div class="display">
+
+<div id="display">0</div>
+
+</div>
+
+<!-- MODE -->
+
+<div class="mode">
+
+<button id="degBtn"
+class="active"
+onclick="setMode('DEG')">
+
+DEG
+
+</button>
+
+<button id="radBtn"
+onclick="setMode('RAD')">
+
+RAD
+
+</button>
+
+</div>
+
+<!-- BUTTONS -->
+
+<div class="buttons">
+
+<button class="function"
+onclick="scientific('sin')">
+sin
+</button>
+
+<button class="function"
+onclick="scientific('cos')">
+cos
+</button>
+
+<button class="function"
+onclick="scientific('tan')">
+tan
+</button>
+
+<button class="function"
+onclick="scientific('asin')">
+sin⁻¹
+</button>
+
+<button class="function"
+onclick="scientific('acos')">
+cos⁻¹
+</button>
+
+<button class="function"
+onclick="scientific('atan')">
+tan⁻¹
+</button>
+
+<button class="function"
+onclick="scientific('log')">
+log
+</button>
+
+<button class="function"
+onclick="scientific('ln')">
+ln
+</button>
+
+<button class="function"
+onclick="scientific('sqrt')">
+√
+</button>
+
+<button class="function"
+onclick="appendValue('^')">
+xʸ
+</button>
+
+<button class="function"
+onclick="scientific('square')">
+x²
+</button>
+
+<button class="function"
+onclick="scientific('cube')">
+x³
+</button>
+
+<button class="function"
+onclick="appendValue('(')">
+(
+</button>
+
+<button class="function"
+onclick="appendValue(')')">
+)
+</button>
+
+<button class="function"
+onclick="scientific('pi')">
+π
+</button>
+
+<button class="function"
+onclick="scientific('e')">
+e
+</button>
+
+<button class="operator"
+onclick="appendValue('%')">
+%
+</button>
+
+<button class="operator"
+onclick="appendValue('/')">
+÷
+</button>
+
+<button class="num"
+onclick="appendValue('7')">
+7
+</button>
+
+<button class="num"
+onclick="appendValue('8')">
+8
+</button>
+
+<button class="num"
+onclick="appendValue('9')">
+9
+</button>
+
+<button class="operator"
+onclick="appendValue('*')">
+×
+</button>
+
+<button class="clear"
+onclick="clearDisplay()">
+AC
+</button>
+
+<button class="delete"
+onclick="deleteLast()">
+⌫
+</button>
+
+<button class="num"
+onclick="appendValue('4')">
+4
+</button>
+
+<button class="num"
+onclick="appendValue('5')">
+5
+</button>
+
+<button class="num"
+onclick="appendValue('6')">
+6
+</button>
+
+<button class="operator"
+onclick="appendValue('-')">
+-
+</button>
+
+<button class="function"
+onclick="scientific('fact')">
+n!
+</button>
+
+<button class="function"
+onclick="scientific('exp')">
+exp
+</button>
+
+<button class="num"
+onclick="appendValue('1')">
+1
+</button>
+
+<button class="num"
+onclick="appendValue('2')">
+2
+</button>
+
+<button class="num"
+onclick="appendValue('3')">
+3
+</button>
+
+<button class="operator"
+onclick="appendValue('+')">
++
+</button>
+
+<button class="function"
+onclick="scientific('reciprocal')">
+1/x
+</button>
+
+<button class="function"
+onclick="scientific('abs')">
+|x|
+</button>
+
+<button class="num"
+onclick="appendValue('0')">
+0
+</button>
+
+<button class="num"
+onclick="appendValue('.')">
+.
+</button>
+
+<button class="equal"
+onclick="calculate()">
+=
+</button>
+
+</div>
+
+<div class="footer">
+
+Exact Scientific Calculator Functions
+
+</div>
+
 </div>
 
 <script>
-let currentInput = "0";
-let expression = "";
-let pendingOperator = null;
-let storedOperand = null;
-let waitingForOperand = false;
 
-const resultDiv = document.getElementById("resultDisplay");
-const expressionDiv = document.getElementById("expressionDisplay");
+/* VARIABLES */
 
-function updateDisplay() {
-    resultDiv.innerText = currentInput;
-    expressionDiv.innerText = expression;
-}
+let display=
+document.getElementById("display");
 
-function inputDigit(d) {
-    if (waitingForOperand) {
-        currentInput = d.toString();
-        waitingForOperand = false;
-    } else {
-        currentInput = currentInput === "0" ? d.toString() : currentInput + d;
+let expression="";
+
+let mode="DEG";
+
+/* MODE */
+
+function setMode(selected){
+
+    mode=selected;
+
+    document.getElementById("degBtn")
+    .classList.remove("active");
+
+    document.getElementById("radBtn")
+    .classList.remove("active");
+
+    if(selected==="DEG"){
+
+        document.getElementById("degBtn")
+        .classList.add("active");
     }
-    updateDisplay();
+
+    else{
+
+        document.getElementById("radBtn")
+        .classList.add("active");
+    }
 }
 
-function inputDecimal() {
-    if (!currentInput.includes(".")) currentInput += ".";
-    updateDisplay();
+/* APPEND */
+
+function appendValue(value){
+
+    if(display.innerText==="0"){
+
+        expression=value;
+    }
+
+    else{
+
+        expression+=value;
+    }
+
+    display.innerText=expression;
 }
 
-function clearAll() {
-    currentInput = "0";
-    expression = "";
-    pendingOperator = null;
-    storedOperand = null;
-    updateDisplay();
+/* CLEAR */
+
+function clearDisplay(){
+
+    expression="";
+
+    display.innerText="0";
 }
 
-function setOperator(op) {
-    storedOperand = currentInput;
-    pendingOperator = op;
-    expression = currentInput + " " + op;
-    waitingForOperand = true;
+/* DELETE */
+
+function deleteLast(){
+
+    expression=
+    expression.slice(0,-1);
+
+    display.innerText=
+    expression || "0";
 }
 
-function compute() {
-    if (!pendingOperator) return;
-    let a = parseFloat(storedOperand);
-    let b = parseFloat(currentInput);
+/* CALCULATE */
+
+function calculate(){
+
+    try{
+
+        let exp=
+        expression.replace(/\^/g,"**");
+
+        let result=
+        eval(exp);
+
+        display.innerText=result;
+
+        expression=result.toString();
+    }
+
+    catch{
+
+        display.innerText="Error";
+    }
+}
+
+/* FACTORIAL */
+
+function factorial(n){
+
+    if(n<0) return "Error";
+
+    if(n===0 || n===1) return 1;
+
+    return n*factorial(n-1);
+}
+
+/* SCIENTIFIC FUNCTIONS */
+
+function scientific(func){
+
+    let num=
+    parseFloat(display.innerText);
+
     let result;
 
-    switch (pendingOperator) {
-        case "+": result = a + b; break;
-        case "-": result = a - b; break;
-        case "×": result = a * b; break;
-        case "÷": result = b === 0 ? "Error" : a / b; break;
+    switch(func){
+
+        case "sin":
+
+            if(mode==="DEG"){
+
+                num=
+                num*Math.PI/180;
+            }
+
+            result=Math.sin(num);
+            break;
+
+        case "cos":
+
+            if(mode==="DEG"){
+
+                num=
+                num*Math.PI/180;
+            }
+
+            result=Math.cos(num);
+            break;
+
+        case "tan":
+
+            if(mode==="DEG"){
+
+                num=
+                num*Math.PI/180;
+            }
+
+            result=Math.tan(num);
+            break;
+
+        case "asin":
+
+            result=Math.asin(num);
+
+            if(mode==="DEG"){
+
+                result=
+                result*180/Math.PI;
+            }
+
+            break;
+
+        case "acos":
+
+            result=Math.acos(num);
+
+            if(mode==="DEG"){
+
+                result=
+                result*180/Math.PI;
+            }
+
+            break;
+
+        case "atan":
+
+            result=Math.atan(num);
+
+            if(mode==="DEG"){
+
+                result=
+                result*180/Math.PI;
+            }
+
+            break;
+
+        case "log":
+
+            result=Math.log10(num);
+            break;
+
+        case "ln":
+
+            result=Math.log(num);
+            break;
+
+        case "sqrt":
+
+            result=Math.sqrt(num);
+            break;
+
+        case "square":
+
+            result=Math.pow(num,2);
+            break;
+
+        case "cube":
+
+            result=Math.pow(num,3);
+            break;
+
+        case "pi":
+
+            result=Math.PI;
+            break;
+
+        case "e":
+
+            result=Math.E;
+            break;
+
+        case "fact":
+
+            result=factorial(num);
+            break;
+
+        case "exp":
+
+            result=Math.exp(num);
+            break;
+
+        case "reciprocal":
+
+            result=1/num;
+            break;
+
+        case "abs":
+
+            result=Math.abs(num);
+            break;
     }
 
-    currentInput = result.toString();
-    expression = "";
-    pendingOperator = null;
-    updateDisplay();
+    result=
+    parseFloat(result.toFixed(10));
+
+    display.innerText=result;
+
+    expression=result.toString();
 }
 
-const buttons = [
-    "AC","⌫","%","÷",
-    "7","8","9","×",
-    "4","5","6","-",
-    "1","2","3","+",
-    "0",".","="
-];
-
-const container = document.getElementById("buttonsContainer");
-
-buttons.forEach(btn => {
-    const b = document.createElement("button");
-    b.innerText = btn;
-
-    b.onclick = () => {
-        if (!isNaN(btn)) inputDigit(btn);
-        else if (btn === ".") inputDecimal();
-        else if (btn === "AC") clearAll();
-        else if (btn === "=") compute();
-        else setOperator(btn);
-    };
-
-    container.appendChild(b);
-});
-
-updateDisplay();
 </script>
+
 </body>
 </html>
